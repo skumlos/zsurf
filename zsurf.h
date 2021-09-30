@@ -2,6 +2,7 @@
 #define ZSURF_H
 
     #include <QApplication>
+    #include <QScreen>
     #include <QShortcut>
     #include <QWidget>
     #include <QDataStream>

@@ -21,7 +21,8 @@ bool cacheEnabled;
 bool saveCookies;
 bool allowPopups;
 bool spellCheck;
-
+bool kioskmode;
+bool disable_context_menu;
 
 // Content filtering
 /*
@@ -162,16 +163,20 @@ public :
             show();
         }
 
-        // Work around for resize bug.
-        if(webEngineViews.length() == 0){
-            QTimer::singleShot(1000, application, [this]()
-            {
-                int oldWidth = width();
-                int oldHeight = height();
-                resize(1, 1);
-                resize(oldWidth, oldHeight);
-            });
+        if(!kioskmode) {
+                // Set window size to fill primary screen
+                QScreen *screen = QGuiApplication::primaryScreen();
+                QRect screenGeometry = screen->geometry();
+                int width = screenGeometry.width();
+                int height = screenGeometry.height();
+                resize(width,height);
+        } else {
+                showFullScreen();
         }
+
+        if(kioskmode || disable_context_menu)
+                setContextMenuPolicy(Qt::NoContextMenu);
+
         setAttribute(Qt::WA_DeleteOnClose, true);
 
         webEngineViews.push_back(this);
@@ -379,6 +384,22 @@ void loadConfig()
     } else
     {
         allowPopups = false;
+    }
+
+    if(!settings.value("kiosk").isNull())
+    {
+        kioskmode = settings.value("kiosk").toBool();
+    } else
+    {
+        kioskmode = false;
+    }
+
+    if(!settings.value("disable_context_menu").isNull())
+    {
+        disable_context_menu = settings.value("disable_context_menu").toBool();
+    } else
+    {
+        disable_context_menu = false;
     }
 
     // Determine if cache is enabled
