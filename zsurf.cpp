@@ -107,32 +107,34 @@ public :
             page()->setFeaturePermission(securityOrigin, feature, QWebEnginePage::PermissionGrantedByUser);
         });
 
-        // Handle download request
-        QObject::connect(page()->profile(), &QWebEngineProfile::downloadRequested, [&](QWebEngineDownloadItem* download)
-        {
-            qDebug() << "Download requested.";
-            QString fileName = QFileDialog::getSaveFileName(this, "Save File", downloadPath + download->url().fileName());
-            if(fileName != ""){
-                download->setPath(fileName);
-                download->accept();
-                QObject::connect(download, &QWebEngineDownloadItem::stateChanged, [&, fileName](QWebEngineDownloadItem::DownloadState state)
-                {
-                    if(state == QWebEngineDownloadItem::DownloadCompleted)
+        if(!kioskmode) {
+            // Handle download request
+            QObject::connect(page()->profile(), &QWebEngineProfile::downloadRequested, [&](QWebEngineDownloadItem* download)
+            {
+                qDebug() << "Download requested.";
+                QString fileName = QFileDialog::getSaveFileName(this, "Save File", downloadPath + download->url().fileName());
+                if(fileName != ""){
+                    download->setPath(fileName);
+                    download->accept();
+                    QObject::connect(download, &QWebEngineDownloadItem::stateChanged, [&, fileName](QWebEngineDownloadItem::DownloadState state)
                     {
-                        qDebug() << "Download Complete: " << fileName;
-                        QMessageBox* msgBox = new QMessageBox();
-                        msgBox->setText("Download Complete: " + fileName);
-                        msgBox->show();
-                    } else
-                    {
-                        qDebug() << "Download Failed: " << fileName;
-                        QMessageBox* msgBox = new QMessageBox();
-                        msgBox->setText("Download Failed: " + fileName);
-                        msgBox->show();
-                    }
-                });
-            }
-        });
+                        if(state == QWebEngineDownloadItem::DownloadCompleted)
+                        {
+                            qDebug() << "Download Complete: " << fileName;
+                            QMessageBox* msgBox = new QMessageBox();
+                            msgBox->setText("Download Complete: " + fileName);
+                            msgBox->show();
+                        } else
+                        {
+                            qDebug() << "Download Failed: " << fileName;
+                            QMessageBox* msgBox = new QMessageBox();
+                            msgBox->setText("Download Failed: " + fileName);
+                            msgBox->show();
+                        }
+                    });
+                }
+            });
+        }
 
         // Handle close window request
         QObject::connect(page(), &QWebEnginePage::windowCloseRequested, [&](){
